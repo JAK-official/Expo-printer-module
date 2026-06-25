@@ -1,5 +1,6 @@
 import ExpoPrinterModule from "./ExpoPrinterModule";
 import { Platform } from "react-native";
+import { XpTt426bLabel } from "./ExpoPrinter.types";
 
 export const Printer = {
   getVersion() {
@@ -23,6 +24,10 @@ export const Printer = {
 
   printTest() {
     return ExpoPrinterModule.printTest();
+  },
+
+  printXpTt426bLabel(data: XpTt426bLabel) {
+    return ExpoPrinterModule.printXpTt426bLabel(data);
   },
 
   disconnect() {

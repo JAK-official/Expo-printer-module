@@ -112,6 +112,69 @@ class PrinterService(
         .print()
     }
 
+    fun printXpTt426bLabel(
+        productName: String,
+        productLine2: String,
+        productLine3: String,
+        productionDate: String,
+        lineTitle: String,
+        lineValue: String,
+        casesOnPallet: String,
+        palletNo: String,
+        barcodeValue: String
+        ) {
+
+        val p = printer
+            ?: throw Exception("Printer not connected")
+
+        p.sizeMm(76.0, 100.0)
+            .gapMm(0.0, 0.0)
+            .reference(0, 0)
+            .direction(TSPLConst.DIRECTION_FORWARD)
+            .density(10)
+            .cls()
+
+            .text(10, 10, TSPLConst.FNT_8_12, 1, 1, "Product:")
+            .text(10, 30, TSPLConst.FNT_8_12, 1, 1, productName)
+            .text(10, 50, TSPLConst.FNT_8_12, 1, 1, productLine2)
+            .text(10, 70, TSPLConst.FNT_8_12, 1, 1, productLine3)
+
+            .text(260, 10, TSPLConst.FNT_8_12, 1, 1, "Production Date:")
+            .text(260, 30, TSPLConst.FNT_8_12, 1, 1, productionDate)
+
+            .text(10, 110, TSPLConst.FNT_8_12, 1, 1, lineTitle)
+            .text(10, 130, TSPLConst.FNT_8_12, 1, 1, lineValue)
+
+            .text(10, 170, TSPLConst.FNT_8_12, 1, 1, "Cases on pallet:")
+            .text(10, 190, TSPLConst.FNT_8_12, 1, 1, casesOnPallet)
+
+            .text(260, 170, TSPLConst.FNT_8_12, 1, 1, "Pallet no:")
+            .text(260, 190, TSPLConst.FNT_8_12, 1, 1, palletNo)
+
+            .barcode(
+            60,
+            230,
+            TSPLConst.CODE_TYPE_128,
+            80,
+            TSPLConst.READABLE_CENTER,
+            TSPLConst.ROTATION_0,
+            2,
+            2,
+            barcodeValue
+            )
+
+            .text(
+            10,
+            330,
+            TSPLConst.FNT_8_12,
+            1,
+            1,
+            barcodeValue
+            )
+
+            .print(1)
+        }
+
 
   fun disconnect() {
         try {

@@ -54,6 +54,21 @@ class ExpoPrinterModule : Module() {
     Function("disconnect") {
       printerService.disconnect()
     }
+
+    AsyncFunction("printXpTt426bLabel") { data: Map<String, String> ->
+
+      printerService.printXpTt426bLabel(
+        productName = data["productName"] ?: "",
+        productLine2 = data["productLine2"] ?: "",
+        productLine3 = data["productLine3"] ?: "",
+        productionDate = data["productionDate"] ?: "",
+        lineTitle = data["lineTitle"] ?: "",
+        lineValue = data["lineValue"] ?: "",
+        casesOnPallet = data["casesOnPallet"] ?: "",
+        palletNo = data["palletNo"] ?: "",
+        barcodeValue = data["barcodeValue"] ?: ""
+      )
+    }
   }
 
   private fun hasBluetoothPermissions(): Boolean {
