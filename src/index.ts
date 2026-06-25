@@ -1,8 +1,33 @@
-// Reexport the native module. On web, it will be resolved to ExpoPrinterModule.web.ts
-// and on native platforms to ExpoPrinterModule.ts
-import ExpoPrinterModule from './ExpoPrinterModule';
+import ExpoPrinterModule from "./ExpoPrinterModule";
+import { Platform } from "react-native";
 
-export { default } from './ExpoPrinterModule';
-export * from './ExpoPrinter.types';
+export const Printer = {
+  getVersion() {
+    return ExpoPrinterModule.getVersion();
+  },
 
-export const getVersion = () => ExpoPrinterModule.getVersion();
+  hasBluetoothPermissions() {
+    if (Platform.OS !== "android") {
+      return true;
+    }
+    return ExpoPrinterModule.hasBluetoothPermissions();
+  },
+
+  connect(address: string) {
+    return ExpoPrinterModule.connect(address);
+  },
+
+  isConnected() {
+    return ExpoPrinterModule.isConnected();
+  },
+
+  printTest() {
+    return ExpoPrinterModule.printTest();
+  },
+
+  disconnect() {
+    return ExpoPrinterModule.disconnect();
+  },
+};
+
+export default Printer;
