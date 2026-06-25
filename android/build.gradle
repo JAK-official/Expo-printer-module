@@ -8,11 +8,23 @@ version = '0.1.0'
 
 android {
   namespace "expo.modules.printer"
+
   defaultConfig {
     versionCode 1
     versionName "0.1.0"
   }
+
   lintOptions {
     abortOnError false
   }
+}
+
+repositories {
+  flatDir {
+    dirs 'libs'
+  }
+}
+
+dependencies {
+  implementation files('libs/printer-lib-3.5.8.aar')
 }
