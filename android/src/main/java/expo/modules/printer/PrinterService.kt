@@ -154,9 +154,13 @@ class PrinterService(private val context: android.content.Context) {
         val yPalletLabel = row3Top + 15
         val yPalletValue = row3Top + 45
 
+        // Center of row 4
+        val row4CenterY = (row4Top + row4Bottom) / 2
+
         val yBarcodeLabel = row4Top + 20
-        val barcodeHeight = 120
-        val yBarcode = yBarcodeLabel + 40
+        val barcodeHeight = 150
+        // Vertically center only the barcode within row 4
+        val yBarcode = row4Top + (row4Height - barcodeHeight) / 2
 
         // ---- Columns ----
         val col1 = margin + 10
@@ -203,8 +207,13 @@ class PrinterService(private val context: android.content.Context) {
         // Center the barcode horizontally
         val narrow = 3
         val wide = 3 // for Code 128, wide = narrow (it's a 1D barcode with fixed ratio)
-        val barcodeWidth = (11 * barcodeValue.length + 35) * narrow // approximate width
-        val barcodeStartX = (widthDots - barcodeWidth) / 2
+        val boxCenterX = widthDots / 2
+
+        // Approximate Code 128 width
+        val barcodeWidth = (11 * barcodeValue.length + 35) * narrow
+
+        // Center inside the printable area (inside the border)
+        val barcodeStartX = margin + ((widthDots - 2 * margin) - barcodeWidth) / 2 + 40
 
         p.barcode(
                 barcodeStartX,
