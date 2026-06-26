@@ -107,6 +107,10 @@ class PrinterService(private val context: android.content.Context) {
                 .density(5) // print density (0‑15)
                 .cls()
 
+        // Added in order to fix the problem of getting a wrong print if the first printed paper is
+        // directly teared off
+        connection?.sendData("SET TEAR ON\r\n".toByteArray(Charsets.US_ASCII))
+
         // Convert mm to dots at 203 DPI
         val dpi = 203
         val widthDots = (labelWidthMm / 25.4 * dpi).toInt()
@@ -220,14 +224,13 @@ class PrinterService(private val context: android.content.Context) {
                 yBarcode,
                 TSPLConst.CODE_TYPE_128,
                 barcodeHeight,
-                TSPLConst.READABLE_CENTER, // show human‑readable text below
+                TSPLConst.READABLE_CENTER,
                 TSPLConst.ROTATION_0,
                 narrow,
                 wide,
                 barcodeValue
         )
 
-        // ---- Print one label ----
         p.print(1)
     }
 
