@@ -11,3 +11,15 @@ export type PrinterStatus = {
 export type PrintTextOptions = {
   text: string;
 };
+
+export type XpTt426bLabel = {
+  productName: string;
+  productLine2: string;
+  productLine3: string;
+  productionDate: string;
+  lineTitle: string;
+  lineValue: string;
+  casesOnPallet: string;
+  palletNo: string;
+  barcodeValue: string;
+};
