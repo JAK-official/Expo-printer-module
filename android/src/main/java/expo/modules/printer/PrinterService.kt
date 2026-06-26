@@ -83,105 +83,116 @@ class PrinterService(private val context: android.content.Context) {
     }
 
     fun printXpTt426bLabel(
-            productName: String,
-            productLine2: String,
-            productLine3: String,
-            productionDate: String,
-            lineTitle: String,
-            lineValue: String,
-            casesOnPallet: String,
-            palletNo: String,
-            barcodeValue: String
+            productName: String, // e.g., "Jumbo Diet"
+            productLine2: String, // e.g., "Vanilla Chocolate"
+            productLine3: String, // (unused in your design – you can omit or merge)
+            productionDate: String, // e.g., "02/03/2026"
+            lineTitle: String, // e.g., "Line"
+            lineValue: String, // e.g., "Line 1"
+            casesOnPallet: String, // e.g., "120"
+            palletNo: String, // e.g., "2"
+            barcodeValue: String // e.g., "P000000001"
     ) {
         val p = printer ?: throw Exception("Printer not connected")
 
-        // --- CORRECTED: 203 DPI, 100mm width (matching your "800 dots" paper) ---
-        val DPI = 203
-        val labelWidthMm = 100.0 // Matches your ~800 dots paper
+        // Label dimensions (in mm) – adjust to your actual label size
+        val labelWidthMm = 100.0
         val labelHeightMm = 180.0
 
+        // Set up media, gap, and clear buffer
         p.sizeMm(labelWidthMm, labelHeightMm)
-                .gapMm(0.0, 0.0) // Set to 2.0 or 3.0 if using gap labels
-                .reference(
-                        0,
-                        0
-                ) // Prints exactly at x=0. If you still see left empty space, change to
-                // reference(20, 0) to nudge right.
+                .gapMm(3.0, 0.0) // <-- ESSENTIAL for gap labels
+                .reference(0, 0) // origin at top‑left
                 .direction(TSPLConst.DIRECTION_FORWARD)
-                .density(10)
+                .density(10) // print density (0‑15)
                 .cls()
 
-        // Calculate exact dots for 100mm at 203 DPI
-        val labelWidthDots = (labelWidthMm / 25.4 * DPI).toInt() // ~800 dots!
-        val margin = 20
-        val col1_x = margin + 20
-        val col2_x = labelWidthDots / 2 + margin // Middle split (approx 410)
+        // Convert mm to dots at 203 DPI
+        val dpi = 203
+        val widthDots = (labelWidthMm / 25.4 * dpi).toInt()
+        val heightDots = (labelHeightMm / 25.4 * dpi).toInt()
+        val margin = 20 // inner margin in dots
 
-        // Row Y coordinates (in dots, adjusted for 203 DPI)
-        val row1_y = 20
-        val row2_y = 160
-        val row3_y = 200
-        val row4_y = 280
-        val row5_y = 380 // Barcode row
+        // ---- Row Y positions (in dots) ----
+        val yProductLabel = 20
+        val yProductValue = 50
+        val yProductLine2 = 90 // second line of product name
+        val yProdDateLabel = 20
+        val yProdDateValue = 50
+        val yLineTitle = 130
+        val yLineValue = 160
+        val yCasesLabel = 200
+        val yCasesValue = 230
+        val yPalletLabel = 200
+        val yPalletValue = 230
+        val yBarcodeLabel = 280
+        val yBarcode = 300
 
-        // --- OUTER BORDER (Now properly fills the 100mm width) ---
-        p.box(
-                margin,
-                margin,
-                labelWidthDots - (margin * 2), // ~780 dots
-                780,
-                3
-        )
+        // ---- Columns ----
+        val col1 = margin + 10 // left column start
+        val col2 = widthDots / 2 + 10 // right column start
 
-        // --- HORIZONTAL DIVIDERS ---
-        p.bar(margin, row2_y - 10, labelWidthDots - (margin * 2), 2)
-        p.bar(margin, row3_y + 40, labelWidthDots - (margin * 2), 2)
-        p.bar(margin, row5_y - 10, labelWidthDots - (margin * 2), 2)
+        // ---- Outer border ----
+        p.box(margin, margin, widthDots - 2 * margin, heightDots - 2 * margin, 3)
 
-        // --- VERTICAL DIVIDER (Middle line) ---
-        p.bar(col2_x, margin, 2, row2_y - 20) // Split top section
-        p.bar(col2_x, row3_y + 50, 2, 80) // Split bottom section
+        // ---- Horizontal dividers ----
+        p.bar(margin, yLineTitle - 20, widthDots - 2 * margin, 2)
+        p.bar(margin, yCasesLabel - 20, widthDots - 2 * margin, 2)
+        p.bar(margin, yBarcodeLabel - 20, widthDots - 2 * margin, 2)
 
-        // --- LEFT COLUMN ---
-        p.text(col1_x, row1_y, TSPLConst.FNT_8_12, 2, 2, "Product:")
-        p.text(col1_x, row1_y + 40, TSPLConst.FNT_8_12, 2, 2, productName)
-        p.text(col1_x, row1_y + 90, TSPLConst.FNT_8_12, 2, 2, productLine2)
-        p.text(col1_x, row1_y + 140, TSPLConst.FNT_8_12, 2, 2, productLine3)
+        // ---- Vertical divider (between left and right columns) ----
+        val midX = widthDots / 2
+        p.bar(midX, margin, 2, yLineTitle - 20 - margin) // top section
+        p.bar(
+                midX,
+                yCasesLabel - 20,
+                2,
+                (yBarcodeLabel - 20) - (yCasesLabel - 20)
+        ) // bottom section
 
-        // --- RIGHT COLUMN ---
-        p.text(col2_x + 20, row1_y, TSPLConst.FNT_8_12, 2, 2, "Prod Date:")
-        p.text(col2_x + 20, row1_y + 40, TSPLConst.FNT_8_12, 2, 2, productionDate)
+        // ====== 1. LEFT COLUMN: Product ======
+        p.text(col1, yProductLabel, TSPLConst.FNT_8_12, 2, 2, "Product")
+        p.text(col1, yProductValue, TSPLConst.FNT_8_12, 2, 2, productName)
+        p.text(col1, yProductLine2, TSPLConst.FNT_8_12, 2, 2, productLine2) // second line
 
-        // --- FULL WIDTH ROW ---
-        p.text(col1_x, row2_y + 10, TSPLConst.FNT_8_12, 2, 2, lineTitle)
-        p.text(col1_x, row2_y + 50, TSPLConst.FNT_8_12, 2, 2, lineValue)
+        // ====== 2. RIGHT COLUMN: Production Date ======
+        p.text(col2, yProdDateLabel, TSPLConst.FNT_8_12, 2, 2, "Production Date")
+        p.text(col2, yProdDateValue, TSPLConst.FNT_8_12, 2, 2, productionDate)
 
-        // --- TWO COLUMN ROW ---
-        p.text(col1_x, row3_y + 60, TSPLConst.FNT_8_12, 2, 2, "Cases:")
-        p.text(col1_x, row3_y + 100, TSPLConst.FNT_8_12, 2, 2, casesOnPallet)
-        p.text(col2_x + 10, row3_y + 60, TSPLConst.FNT_8_12, 2, 2, "Pallet #:")
-        p.text(col2_x + 10, row3_y + 100, TSPLConst.FNT_8_12, 2, 2, palletNo)
+        // ====== 3. FULL WIDTH: Line ======
+        p.text(col1, yLineTitle, TSPLConst.FNT_8_12, 2, 2, lineTitle)
+        p.text(col1, yLineValue, TSPLConst.FNT_8_12, 2, 2, lineValue)
 
-        p.text(col1_x, row5_y - 20, TSPLConst.FNT_8_12, 2, 2, "Pallet (CODE 128)")
+        // ====== 4. TWO COLUMNS: Cases & Pallet ======
+        p.text(col1, yCasesLabel, TSPLConst.FNT_8_12, 2, 2, "Cases on pallet")
+        p.text(col1, yCasesValue, TSPLConst.FNT_8_12, 2, 2, casesOnPallet)
 
-        // --- BARCODE (Perfectly centered using exact width calculation for Code 128) ---
-        // Code 128 width formula: (11 * characters + 35) * narrow_width
+        p.text(col2, yPalletLabel, TSPLConst.FNT_8_12, 2, 2, "Pallet No.")
+        p.text(col2, yPalletValue, TSPLConst.FNT_8_12, 2, 2, palletNo)
+
+        // ====== 5. BARCODE ======
+        p.text(col1, yBarcodeLabel, TSPLConst.FNT_8_12, 2, 2, "Pallet (CODE 128)")
+
+        // Center the barcode horizontally
         val narrow = 3
-        val barcodeWidth = (11 * barcodeValue.length + 35) * narrow
-        val barcodeStartX = (labelWidthDots - barcodeWidth) / 2
+        val wide = 3 // for Code 128, wide = narrow (it's a 1D barcode with fixed ratio)
+        val barcodeHeight = 120 // height in dots
+        val barcodeWidth = (11 * barcodeValue.length + 35) * narrow // approximate width
+        val barcodeStartX = (widthDots - barcodeWidth) / 2
 
         p.barcode(
                 barcodeStartX,
-                row5_y + 10,
+                yBarcode,
                 TSPLConst.CODE_TYPE_128,
-                120,
-                TSPLConst.READABLE_CENTER,
+                barcodeHeight,
+                TSPLConst.READABLE_CENTER, // show human‑readable text below
                 TSPLConst.ROTATION_0,
-                narrow, // narrow
-                3, // wide
+                narrow,
+                wide,
                 barcodeValue
         )
 
+        // ---- Print one label ----
         p.print(1)
     }
 
