@@ -97,14 +97,14 @@ class PrinterService(private val context: android.content.Context) {
 
         // Label dimensions (in mm) – adjust to your actual label size
         val labelWidthMm = 100.0
-        val labelHeightMm = 180.0
+        val labelHeightMm = 150.0
 
         // Set up media, gap, and clear buffer
         p.sizeMm(labelWidthMm, labelHeightMm)
-                .gapMm(3.0, 0.0) // <-- ESSENTIAL for gap labels
+                .gapMm(4.0, 0.0) // <-- ESSENTIAL for gap labels
                 .reference(0, 0) // origin at top‑left
                 .direction(TSPLConst.DIRECTION_FORWARD)
-                .density(10) // print density (0‑15)
+                .density(5) // print density (0‑15)
                 .cls()
 
         // Convert mm to dots at 203 DPI
@@ -113,42 +113,69 @@ class PrinterService(private val context: android.content.Context) {
         val heightDots = (labelHeightMm / 25.4 * dpi).toInt()
         val margin = 20 // inner margin in dots
 
-        // ---- Row Y positions (in dots) ----
-        val yProductLabel = 20
-        val yProductValue = 50
-        val yProductLine2 = 90 // second line of product name
-        val yProdDateLabel = 20
-        val yProdDateValue = 50
-        val yLineTitle = 130
-        val yLineValue = 160
-        val yCasesLabel = 200
-        val yCasesValue = 230
-        val yPalletLabel = 200
-        val yPalletValue = 230
-        val yBarcodeLabel = 280
-        val yBarcode = 300
+        // Printable area
+        val top = margin
+        val bottom = heightDots - margin
+        val printableHeight = bottom - top
+
+        // Bottom half is reserved for the barcode row (row 4)
+        val row4Height = printableHeight / 2
+
+        // Top half is split equally between rows 1, 2 and 3
+        val topHalfHeight = printableHeight - row4Height
+        val rowHeight = topHalfHeight / 3
+
+        // Row boundaries
+        val row1Top = top
+        val row1Bottom = row1Top + rowHeight
+
+        val row2Top = row1Bottom
+        val row2Bottom = row2Top + rowHeight
+
+        val row3Top = row2Bottom
+        val row3Bottom = row3Top + rowHeight
+
+        val row4Top = row3Bottom
+        val row4Bottom = bottom
+
+        // Text positions
+        val yProductLabel = row1Top + 15
+        val yProductValue = row1Top + 45
+        val yProductLine2 = row1Top + 80
+
+        val yProdDateLabel = row1Top + 15
+        val yProdDateValue = row1Top + 45
+
+        val yLineTitle = row2Top + 15
+        val yLineValue = row2Top + 45
+
+        val yCasesLabel = row3Top + 15
+        val yCasesValue = row3Top + 45
+        val yPalletLabel = row3Top + 15
+        val yPalletValue = row3Top + 45
+
+        val yBarcodeLabel = row4Top + 20
+        val barcodeHeight = 120
+        val yBarcode = yBarcodeLabel + 40
 
         // ---- Columns ----
-        val col1 = margin + 10 // left column start
-        val col2 = widthDots / 2 + 10 // right column start
+        val col1 = margin + 10
+        val col2 = widthDots / 2 + 10
+        val midX = widthDots / 2
 
         // ---- Outer border ----
         p.box(margin, margin, widthDots - 2 * margin, heightDots - 2 * margin, 3)
 
-        // ---- Horizontal dividers ----
-        p.bar(margin, yLineTitle - 20, widthDots - 2 * margin, 2)
-        p.bar(margin, yCasesLabel - 20, widthDots - 2 * margin, 2)
-        p.bar(margin, yBarcodeLabel - 20, widthDots - 2 * margin, 2)
+        // Horizontal dividers
+        p.bar(margin, row1Bottom, widthDots - 2 * margin, 2)
+        p.bar(margin, row2Bottom, widthDots - 2 * margin, 2)
+        p.bar(margin, row3Bottom, widthDots - 2 * margin, 2)
 
-        // ---- Vertical divider (between left and right columns) ----
-        val midX = widthDots / 2
-        p.bar(midX, margin, 2, yLineTitle - 20 - margin) // top section
-        p.bar(
-                midX,
-                yCasesLabel - 20,
-                2,
-                (yBarcodeLabel - 20) - (yCasesLabel - 20)
-        ) // bottom section
+        // Top section (Product / Production Date)
+        p.bar(midX, row1Top, 2, row1Bottom - row1Top)
+
+        // Bottom section (Cases / Pallet)
+        p.bar(midX, row3Top, 2, row3Bottom - row3Top)
 
         // ====== 1. LEFT COLUMN: Product ======
         p.text(col1, yProductLabel, TSPLConst.FNT_8_12, 2, 2, "Product")
@@ -176,7 +203,6 @@ class PrinterService(private val context: android.content.Context) {
         // Center the barcode horizontally
         val narrow = 3
         val wide = 3 // for Code 128, wide = narrow (it's a 1D barcode with fixed ratio)
-        val barcodeHeight = 120 // height in dots
         val barcodeWidth = (11 * barcodeValue.length + 35) * narrow // approximate width
         val barcodeStartX = (widthDots - barcodeWidth) / 2
 
